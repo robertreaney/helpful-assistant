@@ -1,0 +1,11 @@
+workspace
+*__pycache__
+*.wav
+.terraform*
+.pem
+.log
+.cache
+.env
+.certificates
+.secrets
+.venv
