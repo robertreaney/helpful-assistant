@@ -68,7 +68,6 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapi
 # CLIENT_SECRETS = '.secrets/creds.json'
 TOKEN = '.secrets/token.json'
 secret_name = "dev/google/oauth"
-CLIENT_SECRETS = get_secret(secret_name)
 
 class GoogleClient:
     def __init__(self):
@@ -82,7 +81,7 @@ class GoogleClient:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_config(CLIENT_SECRETS, SCOPES)
+                flow = InstalledAppFlow.from_client_config(get_secret(secret_name), SCOPES)
                 creds = flow.run_local_server(port=50)
             with open(".secrets/token.json", "w") as token:
                 token.write(creds.to_json())

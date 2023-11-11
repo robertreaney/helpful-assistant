@@ -1,23 +1,11 @@
 version: "3.8"
 services:
-  web:
-    env_file:
-      - .env
-    container_name: flask
+  server:
+    container_name: helpfulai
     build:
       context: "."
       dockerfile: Dockerfile
-    expose:
-      - 8000
-    environment:
-      - FLASK_ENV=development
-      - FLASK_APP=app
     volumes:
       - ~/.aws:/root/.aws:ro
-      - ./services/website:/wd
-      - ./.log/website:/var/log/website
-    networks:
-      - nginx_network
-    command: >
-      sh -c "echo Running in Development &&
-            gunicorn --bind 0.0.0.0:8000 app:app > /var/log/website/gunicorn.log 2>&1"
+      - ./src:/wd
+    command: ["python", "src/main.py"]
