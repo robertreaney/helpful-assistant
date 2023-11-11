@@ -9,3 +9,4 @@ workspace
 .certificates
 .secrets
 .venv
+.logs
