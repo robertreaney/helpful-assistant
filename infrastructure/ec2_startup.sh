@@ -22,8 +22,10 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 # install aws cli
 sudo apt-get install -y awscli
 
+mkdir ~/projects
+cd ~/projects
 git clone https://github.com/robertreaney/helpful-assistant.git
-
+cd helpful-assistant
 
 # launch application
 # sudo docker compose -f ~/docker-compose.prod.yml up
