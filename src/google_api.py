@@ -13,6 +13,9 @@ from email.mime.text import MIMEText
 import base64
 from dataclasses import dataclass
 
+# customer
+from helpers import get_secret
+
 @dataclass
 class EmailData:
     From: str = None
@@ -62,8 +65,10 @@ class EmailData:
         return cls.from_dict(email_data)
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapis.com/auth/calendar']
-CLIENT_SECRETS = '.secrets/creds.json'
+# CLIENT_SECRETS = '.secrets/creds.json'
 TOKEN = '.secrets/token.json'
+secret_name = "dev/google/oauth"
+CLIENT_SECRETS = get_secret(secret_name)
 
 class GoogleClient:
     def __init__(self):
@@ -77,7 +82,7 @@ class GoogleClient:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS, SCOPES)
+                flow = InstalledAppFlow.from_client_config(CLIENT_SECRETS, SCOPES)
                 creds = flow.run_local_server(port=50)
             with open(".secrets/token.json", "w") as token:
                 token.write(creds.to_json())
@@ -159,5 +164,6 @@ class GmailClient(GoogleClient):
 #         return calendar_service
 
 if __name__ == '__main__':
+    logging.info('starting up service')
     client = GmailClient()
     client.check_emails()

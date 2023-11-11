@@ -5,7 +5,7 @@ services:
       - .env
     container_name: flask
     build:
-      context: ./services/website
+      context: "."
       dockerfile: Dockerfile
     expose:
       - 8000

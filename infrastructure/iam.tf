@@ -1,6 +1,6 @@
 # Define the IAM role
-resource "aws_iam_role" "ec2_s3_access_role" {
-  name = "EC2S3AccessRole"
+resource "aws_iam_role" "ec2_access_role" {
+  name = "EC2HelfulAIAccessRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -8,7 +8,7 @@ resource "aws_iam_role" "ec2_s3_access_role" {
       {
         Action = "sts:AssumeRole",
         Principal = {
-          Service = "ec2.amazonaws.com"
+          Service = "ec2.amazonaws.com" # Assuming the role is for EC2 instances
         },
         Effect = "Allow",
         Sid    = ""
@@ -17,10 +17,10 @@ resource "aws_iam_role" "ec2_s3_access_role" {
   })
 }
 
-# Define the IAM policy that allows access to S3 (for example purposes)
-resource "aws_iam_policy" "ec2_ecr_s3_access_policy" {
-  name        = "EC2ECRS3AccessPolicy"
-  description = "My policy that grants access to ECR and S3"
+
+resource "aws_iam_policy" "ec2_access_policy" {
+  name        = "HelpfulAIAccessPolicy"
+  description = "My policy that grants access to Helpful AI services"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -28,36 +28,29 @@ resource "aws_iam_policy" "ec2_ecr_s3_access_policy" {
       {
         Action   = "s3:*",
         Effect   = "Allow",
-        Resource = "*"
+        Resource = "*" # Grants all actions on all S3 resources
       },
       {
         Action = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:BatchCheckLayerAvailability"
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
         ],
         Effect   = "Allow",
-        Resource = aws_ecr_repository.cloud-resume.arn
-      },
-      {
-        Action   = "ecr:GetAuthorizationToken",
-        Effect   = "Allow",
-        Resource = "*"
+        Resource = "*" # Specify the ARN of the secrets if you want to restrict access
       }
     ]
   })
-
-  depends_on = [aws_ecr_repository.cloud-resume]
 }
 
+
 # Attach the policy to the role
-resource "aws_iam_role_policy_attachment" "ec2_s3_attach" {
-  policy_arn = aws_iam_policy.ec2_ecr_s3_access_policy.arn
-  role       = aws_iam_role.ec2_s3_access_role.name
+resource "aws_iam_role_policy_attachment" "ec2_attach" {
+  policy_arn = aws_iam_policy.ec2_access_policy.arn
+  role       = aws_iam_role.ec2_access_role.name
 }
 
 # Create the EC2 instance profile
-resource "aws_iam_instance_profile" "ec2_s3_instance_profile" {
-  name = "EC2InstanceProfile"
-  role = aws_iam_role.ec2_s3_access_role.name
+resource "aws_iam_instance_profile" "ec2_instance_profile" {
+  name = "HelpfulAIInstanceProfile"
+  role = aws_iam_role.ec2_access_role.name
 }
