@@ -28,7 +28,7 @@ resource "aws_security_group" "helpful_ai_sg" {
 
 resource "aws_instance" "helpful_ai" {
   ami                    = "ami-053b0d53c279acc90"
-  instance_type          = "t3a.nano"
+  instance_type          = "t3a.micro"
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.helpful_ai_sg.id]
