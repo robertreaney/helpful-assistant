@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 # customer
 from helpers import get_secret
+from agents import RecordKeeper
 
 @dataclass
 class EmailData:
@@ -91,6 +92,7 @@ class GmailClient(GoogleClient):
     def __init__(self):
         super().__init__()
         self.service = build('gmail', 'v1', credentials=self.creds)
+        self.recorder = RecordKeeper()
 
     def send_message(self, to, subject, message_text, thread_id=None, in_reply_to=None, user_id='reaneyassistant@gmail.com'):
         sender = user_id
@@ -145,13 +147,18 @@ class GmailClient(GoogleClient):
             # print email
             print(f"Email from {email_data['From']} with subject '{email_data['Subject']}' saved to {filename}")
 
+            # handle email with LLm
+            response = self.recorder(msg['snippet'])
+
+            logging.info('sending reply email')
             # reply to email
             self.send_message(
                 to=email_data.From, 
                 subject=email_data.Subject, 
-                message_text=f'message received! i will get right on this. \n\n response to: \n\n {email_data.Snippet}', 
-                thread_id=email_data.threadId, 
-                in_reply_to=email_data.MessageId)
+                message_text=response['output'], 
+                # thread_id=email_data.threadId, 
+                # in_reply_to=email_data.MessageId
+                )
 
 
 # class CalendarClient(GoogleClient):
