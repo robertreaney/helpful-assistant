@@ -1,6 +1,6 @@
 from langchain.tools import tool
-from pydantic import BaseModel, Field
 import logging
+from fuzzywuzzy import fuzz
 from langchain.tools.base import ToolException
 
 # custom code
@@ -17,6 +17,21 @@ def _handle_error(error: ToolException) -> str:
     )
 
 @tool()
+def delete(items:str) -> str:
+    """Removes items from a users list. Useful for when an item on the list has been accomplished. Items should be separated by a newline character."""
+    try:
+        logging.info('triggered `delete` tool')
+        file = ListFile()
+        cached_items = file.content.split('\n')
+        incoming_items = [x.strip() for x in items.split('\n')]
+        # new list is all the items from the original minus anything that matched the incoming items
+        new_list = '\n'.join([x for x in cached_items if all([fuzz.ratio(x, y) < 80 for y in incoming_items])])
+        logging.info(f'new={new_list} incoming={incoming_items} cached={cached_items}')
+        file.write(new_list)
+    except:
+        ToolException('delete tool call failed')
+
+@tool()
 def add(items:str) -> str:
     """Helps user remember things. Adds items of a string to the user's list . Items should be separated by a newline character."""
     try:
@@ -30,7 +45,7 @@ def add(items:str) -> str:
             new_list = items
 
         file.write(new_list)
-        return f"Succesfully wrote to list file\n\nYour List:\n\n{new_list}"
+        return f"Succesfully wrote to list file these items: {items}"
     except:
         raise ToolException("add tool call failed")
 

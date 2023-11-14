@@ -14,7 +14,7 @@ import base64
 from dataclasses import dataclass
 
 # customer
-from helpers import get_secret
+from helpers import get_secret, ListFile
 from agents import RecordKeeper
 
 @dataclass
@@ -69,6 +69,7 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify', 'https://www.googleapi
 # CLIENT_SECRETS = '.secrets/creds.json'
 TOKEN = '.secrets/token.json'
 secret_name = "dev/google/oauth"
+GMAIL_ADDRESS = os.getenv("GMAIL_ADDRESS")
 
 class GoogleClient:
     def __init__(self):
@@ -94,7 +95,7 @@ class GmailClient(GoogleClient):
         self.service = build('gmail', 'v1', credentials=self.creds)
         self.recorder = RecordKeeper()
 
-    def send_message(self, to, subject, message_text, thread_id=None, in_reply_to=None, user_id='reaneyassistant@gmail.com'):
+    def send_message(self, to, subject, message_text, thread_id=None, in_reply_to=None, user_id=GMAIL_ADDRESS):
         sender = user_id
 
         def _create_message(sender, to, subject, message_text, thread_id=None, in_reply_to=None):
@@ -121,7 +122,7 @@ class GmailClient(GoogleClient):
 
     def check_emails(self):
         # fetch unread emails
-        results = self.service.users().messages().list(userId='reaneyassistant@gmail.com', labelIds=['INBOX'], q='is:unread').execute()
+        results = self.service.users().messages().list(userId=GMAIL_ADDRESS, labelIds=['INBOX'], q='is:unread').execute()
         messages = results.get('messages', [])
         
         if not messages:
@@ -130,15 +131,18 @@ class GmailClient(GoogleClient):
         
         for message in messages:
             # get email by id
-            msg = self.service.users().messages().get(userId='reaneyassistant@gmail.com', id=message['id'], format='full').execute()
+            msg = self.service.users().messages().get(userId=GMAIL_ADDRESS, id=message['id'], format='full').execute()
 
             # mark unread email as read by id
-            self.service.users().messages().modify(userId='reaneyassistant@gmail.com', id=message['id'], body={'removeLabelIds': ['UNREAD']}).execute()
+            self.service.users().messages().modify(userId=GMAIL_ADDRESS, id=message['id'], body={'removeLabelIds': ['UNREAD']}).execute()
 
             email_data = EmailData.from_object(msg)
 
             # save email in log
-            filename = Path('.logs') / (datetime.now().strftime("%Y%m%d%H%M%S") + ".txt")
+            y, m, d = datetime.now().strftime("%Y-%m-%d").split('-')
+            filename = Path('.logs/incoming-emails') / y / m / d
+            filename.mkdir(exist_ok=True, parents=True)
+            filename = filename / (datetime.now().strftime('%Y-%md-%d-%H-%M-%S') + ".txt")
             with open(filename, 'w') as file:
                 for key, value in email_data.content().items():
                     file.write(f"{key}: {value}\n")
@@ -151,11 +155,12 @@ class GmailClient(GoogleClient):
             response = self.recorder(msg['snippet'])
 
             logging.info('sending reply email')
+            file = ListFile()
             # reply to email
             self.send_message(
                 to=email_data.From, 
                 subject=email_data.Subject, 
-                message_text=response['output'], 
+                message_text=response['output'] + f'\n\nCurrent List:\n\n{file.content}', 
                 # thread_id=email_data.threadId, 
                 # in_reply_to=email_data.MessageId
                 )

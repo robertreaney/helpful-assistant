@@ -7,5 +7,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ~/.aws:/root/.aws:ro
-      - ./src:/wd
+      - ./src:/wd/src
+      - ./.secrets/:/wd/.secrets
     command: ["python", "src/main.py"]

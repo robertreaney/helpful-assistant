@@ -9,7 +9,7 @@ from langchain.agents.output_parsers import OpenAIFunctionsAgentOutputParser
 
 import logging
 
-from tools import add, get
+from tools import add, get, delete
 
 # class OrganizedListOutputParser(BaseOutputParser):
 #     """Parse the output of an LLM call to a comma-separated list."""
@@ -31,7 +31,7 @@ class RecordKeeper:
         ])   
 
         self.llm = ChatOpenAI(model='gpt-3.5-turbo', temperature=0)
-        self.tools=[add, get]
+        self.tools=[add, get, delete]
 
         self.llm_with_tools = self.llm.bind(functions=[format_tool_to_openai_function(t) for t in self.tools])
 

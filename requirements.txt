@@ -5,3 +5,5 @@ google-auth
 google-auth-oauthlib
 google
 boto3
+fuzzywuzzy
+python-Levenshtein
